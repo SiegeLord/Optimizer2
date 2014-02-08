@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# This file is released into public domain.
+
 from argparse import ArgumentParser
 import time
 

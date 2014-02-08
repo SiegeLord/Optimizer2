@@ -1,5 +1,11 @@
+# Copyright (c) 2014 by Pavel Sountsov
+#
+# All rights reserved. Distributed under GPL 3.0. For full terms see the file LICENSE.
+
 from ConfigParser import NoOptionError
 import random
+
+# Code adapted from C code by Rainer Storn, available at: http://www.icsi.berkeley.edu/~storn/code.html
 
 class DifferentialEvolutionOptimizer:
 	def __init__(self, cfg, limits, runner):

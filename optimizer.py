@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# Copyright (c) 2014 by Pavel Sountsov
+#
+# All rights reserved. Distributed under GPL 3.0. For full terms see the file LICENSE.
+
 from ConfigParser import SafeConfigParser, NoOptionError
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE
