@@ -31,9 +31,10 @@ def runner(cmd_str, res_re, max_launches, pop, verbose):
 			procs.append(Popen(args, stdout=PIPE))
 		
 		for i in range(num_launches):
-			if procs[i].wait() != 0:
-				raise Exception('\'' + cmds[i] + '\' returned a non-0 status!')
 			out, _ = procs[i].communicate()
+			if procs[i].returncode != 0:
+				print out
+				raise Exception('\'' + cmds[i] + '\' returned a non-0 status!')
 			if res_re:
 				match = res_re.search(out)
 				if match:
