@@ -8,7 +8,7 @@ import random
 # Code adapted from C code by Rainer Storn, available at: http://www.icsi.berkeley.edu/~storn/code.html
 
 def pop_variance(pop):
-	average_var = 0
+	mean_var = 1
 	for z in range(1, len(pop[0])):
 		mean = 0.0
 		for i in range(len(pop)):
@@ -19,9 +19,9 @@ def pop_variance(pop):
 			var += (pop[i][z] - mean)**2
 		var /= len(pop) - 1
 		
-		average_var += var
-	average_var /= len(pop[0]) - 1
-	return average_var
+		mean_var *= var
+	pow(mean_var, 1.0 / (len(pop[0]) - 1))
+	return mean_var
 
 
 class DifferentialEvolutionOptimizer:
