@@ -73,7 +73,7 @@ class DifferentialEvolutionOptimizer:
 		self.runner(parents)
 		parents.sort()
 		
-		print 'Initial best: ', parents[0][0], parents[0][1:]
+		print 'Start best:', parents[0][1:], 'fit:', parents[0][0]
 		
 		for gen in range(self.max_gen):
 			factor = self.factor
@@ -127,8 +127,10 @@ class DifferentialEvolutionOptimizer:
 			pop.sort()
 			parents = pop[:self.pop_size]
 			var = pop_variance(parents)
-			print 'Generation ', gen + 1, 'best: ', parents[0][0], parents[0][1:], 'variance: ', var
+			print 'Gen', gen + 1, 'best:', parents[0][1:], 'fit:', parents[0][0], 'pop var:', var
 			if var < self.min_var:
 				print 'Variance lower than minimum variance (%f). Stopping.' % self.min_var
 				break
+			if gen == self.max_gen - 1:
+				print 'Maximum generation reached. Stopping.'
 		return pop

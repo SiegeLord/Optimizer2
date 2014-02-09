@@ -94,8 +94,9 @@ def main():
 	if alg_str == 'de':
 		opt = DifferentialEvolutionOptimizer(cfg, limits, lambda pop: runner(cmd_str, res_re, max_launches, pop, False))
 		pop = opt.run()
+		print 'Final population:'
 		for ind in pop:
-			print ind[0], ind[1:]
+			print ind[1:], 'fit:', ind[0]
 	else:
 		raise Exception('Unknown algorithm \'' + alg_str + '\'')
 
