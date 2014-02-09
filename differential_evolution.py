@@ -36,6 +36,10 @@ class DifferentialEvolutionOptimizer:
 			self.factor = cfg.getfloat('de', 'factor')
 		except NoOptionError:
 			self.factor = None
+		try:
+			self.min_var = cfg.getfloat('de', 'min_var')
+		except NoOptionError:
+			self.min_var = 0
 		
 		self.init = []
 		idx = 0
@@ -124,4 +128,7 @@ class DifferentialEvolutionOptimizer:
 			parents = pop[:self.pop_size]
 			var = pop_variance(parents)
 			print 'Generation ', gen + 1, 'best: ', parents[0][0], parents[0][1:], 'variance: ', var
+			if var < self.min_var:
+				print 'Variance lower than minimum variance (%f). Stopping.' % self.min_var
+				break
 		return pop
