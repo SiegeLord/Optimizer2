@@ -7,6 +7,23 @@ import random
 
 # Code adapted from C code by Rainer Storn, available at: http://www.icsi.berkeley.edu/~storn/code.html
 
+def pop_variance(pop):
+	average_var = 0
+	for z in range(1, len(pop[0])):
+		mean = 0.0
+		for i in range(len(pop)):
+			mean += pop[i][z]
+		mean /= len(pop)
+		var = 0.0
+		for i in range(len(pop)):
+			var += (pop[i][z] - mean)**2
+		var /= len(pop) - 1
+		
+		average_var += var
+	average_var /= len(pop[0]) - 1
+	return average_var
+
+
 class DifferentialEvolutionOptimizer:
 	def __init__(self, cfg, limits, runner):
 		self.pop_size = cfg.getint('de', 'pop_size')
@@ -105,5 +122,6 @@ class DifferentialEvolutionOptimizer:
 			pop = children + parents
 			pop.sort()
 			parents = pop[:self.pop_size]
-			print 'Generation ', gen + 1, 'best: ', parents[0][0], parents[0][1:]
+			var = pop_variance(parents)
+			print 'Generation ', gen + 1, 'best: ', parents[0][0], parents[0][1:], 'variance: ', var
 		return pop
