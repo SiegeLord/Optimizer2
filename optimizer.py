@@ -13,6 +13,7 @@ import shlex
 import re
 
 from differential_evolution import DifferentialEvolutionOptimizer
+from cont_differential_evolution import ContDifferentialEvolutionOptimizer
 
 # pop is an array of vectors with the first element being the fitness
 # and the remaining elements being the parameters
@@ -92,13 +93,16 @@ def main():
 	
 	alg_str = cfg.get('options', 'algorithm')
 	if alg_str == 'de':
-		opt = DifferentialEvolutionOptimizer(cfg, limits, lambda pop: runner(cmd_str, res_re, max_launches, pop, False))
-		pop = opt.run()
-		print 'Final population:'
-		for ind in pop:
-			print ind[1:], 'fit:', ind[0]
+		opt = DifferentialEvolutionOptimizer(cfg, limits, lambda pop: runner(cmd_str, res_re, max_launches, pop, False))	
+	elif alg_str == 'cont_de':
+		opt = ContDifferentialEvolutionOptimizer(cfg, limits, cmd_str, res_re, max_launches)
 	else:
 		raise Exception('Unknown algorithm \'' + alg_str + '\'')
+	
+	pop = opt.run()
+	print 'Final population:'
+	for ind in pop:
+		print ind[1:], 'fit:', ind[0]
 
 if __name__ == '__main__':
     main()

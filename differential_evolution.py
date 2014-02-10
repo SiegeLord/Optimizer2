@@ -5,24 +5,9 @@
 from ConfigParser import NoOptionError
 import random
 
+from common_evolution import *
+
 # Code adapted from C code by Rainer Storn, available at: http://www.icsi.berkeley.edu/~storn/code.html
-
-def pop_variance(pop):
-	mean_var = 1
-	for z in range(1, len(pop[0])):
-		mean = 0.0
-		for i in range(len(pop)):
-			mean += pop[i][z]
-		mean /= len(pop)
-		var = 0.0
-		for i in range(len(pop)):
-			var += (pop[i][z] - mean)**2
-		var /= len(pop) - 1
-		
-		mean_var *= var
-	pow(mean_var, 1.0 / (len(pop[0]) - 1))
-	return mean_var
-
 
 class DifferentialEvolutionOptimizer:
 	def __init__(self, cfg, limits, runner):
@@ -61,19 +46,17 @@ class DifferentialEvolutionOptimizer:
 		self.runner = runner
 	
 	def run(self):
-		parents = []
-		for init in self.init:
-			parents.append([0] + init)
-		for _ in range(self.pop_size - len(self.init)):
-			ind = [0]
-			for lim in self.limits:
-				ind.append(lim[0] + random.random() * (lim[1] - lim[0]))
-			parents.append(ind)
+		parents = new_pop(self.init, self.pop_size, self.limits)
 		
 		self.runner(parents)
 		parents.sort()
 		
 		print 'Start best:', parents[0][1:], 'fit:', parents[0][0]
+		
+		if self.best_strategy:
+			best_idx = 0
+		else:
+			best_idx = None
 		
 		for gen in range(self.max_gen):
 			factor = self.factor
@@ -82,46 +65,8 @@ class DifferentialEvolutionOptimizer:
 			
 			children = []
 			for ii in range(self.pop_size):
-				# Pick 3 other, distinct population members
-				while True:
-					r1 = random.randrange(self.pop_size)
-					if r1 != ii:
-						break
-				while True:
-					r2 = random.randrange(self.pop_size)
-					if r2 != ii and r2 != r1:
-						break
-				while True:
-					r3 = random.randrange(self.pop_size)
-					if r3 != ii and r3 != r2 and r3 != r1:
-						break
-				
-				child = parents[ii][:]
-				j = random.randrange(len(self.limits))
-				if self.best_strategy:
-					for k in range(len(self.limits)):
-						z = (j + k) % len(self.limits) + 1
-						child[z] += factor * (parents[0][z] - child[z]) + factor * (parents[r2][z] - parents[r3][z])
-						if random.random() > self.cross:
-							break
-					origin = child
-				else:
-					for k in range(len(self.limits)):
-						z = (j + k) % len(self.limits) + 1
-						child[z] = parents[r1][z] + factor * (parents[r2][z] - parents[r3][z])
-						if random.random() > self.cross:
-							break
-					origin = parents[r1]
-				
-				for k in range(len(self.limits)):
-					z = k + 1
-					if child[z] < self.limits[k][0]:
-						child[z] = self.limits[k][0] + random.random() * (origin[z] - self.limits[k][0])
-					
-					if child[z] > self.limits[k][1]:
-						child[z] = self.limits[k][1] + random.random() * (origin[z] - self.limits[k][1])
-				
-				children.append(child)
+				children.append(mutate(parents, self.limits, factor, self.cross, ii, best_idx))
+			
 			self.runner(children)
 			pop = children + parents
 			pop.sort()

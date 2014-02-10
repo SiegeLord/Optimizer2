@@ -4,6 +4,7 @@
 
 from argparse import ArgumentParser
 import time
+import random
 
 
 parser = ArgumentParser()
@@ -13,7 +14,7 @@ parser.add_argument('--wait', dest='wait', default=0.0, type=float)
 
 args = parser.parse_args()
 
-time.sleep(args.wait)
+time.sleep(args.wait * random.random())
 
 print args.x, args.y, args.wait
 x = args.x
