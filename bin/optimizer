@@ -12,8 +12,8 @@ import fileinput
 import shlex
 import re
 
-from differential_evolution import DifferentialEvolutionOptimizer
-from cont_differential_evolution import ContDifferentialEvolutionOptimizer
+from optimizer2.differential_evolution import DifferentialEvolutionOptimizer
+from optimizer2.cont_differential_evolution import ContDifferentialEvolutionOptimizer
 
 # pop is an array of vectors with the first element being the fitness
 # and the remaining elements being the parameters

@@ -4,7 +4,7 @@
 
 from ConfigParser import NoOptionError
 from subprocess import Popen, PIPE
-from common_evolution import *
+from optimizer2.common_evolution import *
 
 import random
 import time

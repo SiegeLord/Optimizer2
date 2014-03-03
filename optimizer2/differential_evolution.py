@@ -5,7 +5,7 @@
 from ConfigParser import NoOptionError
 import random
 
-from common_evolution import *
+from optimizer2.common_evolution import *
 
 # Code adapted from C code by Rainer Storn, available at: http://www.icsi.berkeley.edu/~storn/code.html
 
