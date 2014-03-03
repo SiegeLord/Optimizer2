@@ -10,6 +10,5 @@ setup(name='optimizer2',
       url='https://github.com/SiegeLord/Optimizer2',
       scripts=['bin/optimizer'],
       license='LICENSE',
-      long_description=open('Readme.md').read(),
       packages=['optimizer2']
      ) 
