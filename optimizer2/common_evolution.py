@@ -54,7 +54,7 @@ def mutate(parents, limits, factor, cross, idx, best_idx):
 			child[z] += factor * (parents[best_idx][z] - child[z]) + factor * (parents[r2][z] - parents[r3][z])
 			if random.random() > cross:
 				break
-		origin = child
+		origin = parents[idx][:]
 	else:
 		for k in range(len(limits)):
 			z = (j + k) % len(limits) + 1
@@ -62,7 +62,7 @@ def mutate(parents, limits, factor, cross, idx, best_idx):
 			if random.random() > cross:
 				break
 		origin = parents[r1]
-	
+
 	for k in range(len(limits)):
 		z = k + 1
 		if child[z] < limits[k][0]:
