@@ -14,7 +14,7 @@ class DifferentialEvolutionOptimizer:
 		self.pop_size = cfg.getint('de', 'pop_size')
 		if self.pop_size < 5:
 			self.pop_size = 5
-		self.best_strategy = cfg.get('de', 'strategy') != 'best'
+		self.best_strategy = cfg.get('de', 'strategy') == 'best'
 		self.cross = cfg.getfloat('de', 'cross')
 		self.max_gen = cfg.getint('de', 'max_gen')
 		try:
