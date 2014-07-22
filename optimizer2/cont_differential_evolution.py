@@ -116,7 +116,8 @@ class ContDifferentialEvolutionOptimizer:
 		
 		# First, evaluate the parents
 		pop_idx = 0
-		while pop_idx < self.pop_size:
+		num_done = 0
+		while num_done < self.pop_size:
 			while pop_idx < self.pop_size:
 				if self.runner.add_task(pop_idx, parents[pop_idx]):
 					pop_idx += 1
@@ -129,7 +130,9 @@ class ContDifferentialEvolutionOptimizer:
 					break
 				idx, indiv = ret
 				parents[idx] = indiv
-		
+				num_done += 1
+			time.sleep(self.sleep_dur)
+
 		parents.sort()
 		var = pop_variance(parents)
 		print 'Start best:', parents[0][1:], 'fit:', parents[0][0], 'parents var:', var
