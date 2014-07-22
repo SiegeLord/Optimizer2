@@ -114,6 +114,27 @@ class ContDifferentialEvolutionOptimizer:
 		if factor == None:
 			factor = random.random() * 0.5 + 0.5
 		
+		# First, evaluate the parents
+		pop_idx = 0
+		while pop_idx < self.pop_size:
+			while pop_idx < self.pop_size:
+				if self.runner.add_task(pop_idx, parents[pop_idx]):
+					pop_idx += 1
+				else:
+					break
+			
+			while True:
+				ret = self.runner.poll_task()
+				if not ret:
+					break
+				idx, indiv = ret
+				parents[idx] = indiv
+		
+		parents.sort()
+		var = pop_variance(parents)
+		print 'Start best:', parents[0][1:], 'fit:', parents[0][0], 'parents var:', var
+		
+		# Now, check the children
 		trial = 0
 		pop_idx = 0
 		children = []
