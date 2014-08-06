@@ -114,13 +114,12 @@ class ContDifferentialEvolutionOptimizer:
 				else:
 					break
 
-			while True:
-				ret = self.runner.get_task()
-				if not ret:
-					break
-				idx, indiv = ret
-				parents[idx] = indiv
-				num_done += 1
+			ret = self.runner.get_task()
+			if not ret:
+				continue
+			idx, indiv = ret
+			parents[idx] = indiv
+			num_done += 1
 
 		parents.sort()
 		var = pop_variance(parents)
@@ -130,40 +129,36 @@ class ContDifferentialEvolutionOptimizer:
 		trial = 0
 		pop_idx = 0
 		children = []
-		done = False
-		while not done:
+		while True:
 			while True:
 				if self.runner.add_task(pop_idx, mutate(parents, self.limits, factor, self.cross, pop_idx, None)):
 					pop_idx = (pop_idx + 1) % self.pop_size
 				else:
 					break
 
-			while True:
-				ret = self.runner.get_task()
-				if not ret:
+			ret = self.runner.get_task()
+			if not ret:
+				continue
+			trial += 1
+			idx, indiv = ret
+			children.append(indiv)
+
+			if len(children) >= self.pop_size:
+				if self.factor == None:
+					factor = random.random() * 0.5 + 0.5
+
+				pop = children + parents
+				pop.sort()
+				parents = pop[:self.pop_size]
+				var = pop_variance(parents)
+				print 'Trial', trial, 'best:', parents[0][1:], 'fit:', parents[0][0], 'parents var:', var
+				if var < self.min_var:
+					print 'Variance lower than minimum variance (%f). Stopping.' % self.min_var
 					break
-				trial += 1
-				idx, indiv = ret
-				children.append(indiv)
+				children = []
 
-				if len(children) >= self.pop_size:
-					if self.factor == None:
-						factor = random.random() * 0.5 + 0.5
-
-					pop = children + parents
-					pop.sort()
-					parents = pop[:self.pop_size]
-					var = pop_variance(parents)
-					print 'Trial', trial, 'best:', parents[0][1:], 'fit:', parents[0][0], 'parents var:', var
-					if var < self.min_var:
-						print 'Variance lower than minimum variance (%f). Stopping.' % self.min_var
-						done = True
-						break
-					children = []
-
-				if trial >= self.max_trials - 1:
-					print 'Maximum number of trials reached. Stopping.'
-					done = True
-					break
+			if trial >= self.max_trials - 1:
+				print 'Maximum number of trials reached. Stopping.'
+				break
 		self.runner.kill_all();
 		return pop
