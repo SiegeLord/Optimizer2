@@ -5,6 +5,7 @@
 from ConfigParser import NoOptionError
 from subprocess import Popen, PIPE
 from optimizer2.common_evolution import *
+from optimizer2.array_parser import parse_array
 from multiprocessing import Pool, Manager
 
 import random
@@ -88,11 +89,9 @@ class ContDifferentialEvolutionOptimizer:
 			except NoOptionError:
 				break
 
-			init = []
-			for s in init_str[1:-1].split():
-				init.append(float(s))
+			init = parse_array(init_str)
 			if len(init) != len(limits):
-				raise Exception('Invalid init string "%s" (expected "[param0 param1 ...]")' % init_str)
+				raise Exception('init%d invalid: expected %d parameters but got %d.' % (idx, len(limits), len(init)))
 			self.init.append(init)
 			idx += 1
 

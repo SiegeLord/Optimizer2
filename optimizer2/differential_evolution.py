@@ -5,6 +5,7 @@
 from ConfigParser import NoOptionError
 import random
 
+from optimizer2.array_parser import parse_array
 from optimizer2.common_evolution import *
 
 # Code adapted from C code by Rainer Storn, available at: http://www.icsi.berkeley.edu/~storn/code.html
@@ -34,11 +35,9 @@ class DifferentialEvolutionOptimizer:
 			except NoOptionError:
 				break
 
-			init = []
-			for s in init_str[1:-1].split():
-				init.append(float(s))
+			init = parse_array(init_str)
 			if len(init) != len(limits):
-				raise Exception('Invalid init string "%s" (expected "[param0 param1 ...]")' % init_str)
+				raise Exception('init%d invalid: expected %d parameters but got %d.' % (idx, len(limits), len(init)))
 			self.init.append(init)
 			idx += 1
 		
