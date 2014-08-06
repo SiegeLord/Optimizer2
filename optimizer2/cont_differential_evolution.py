@@ -5,68 +5,67 @@
 from ConfigParser import NoOptionError
 from subprocess import Popen, PIPE
 from optimizer2.common_evolution import *
+from multiprocessing import Pool, Manager
 
 import random
 import time
 import shlex
 
+def task_runner(res_queue, cmd_str, res_re, verbose, pop_idx, pop_indiv):
+	cmd = cmd_str.format(*pop_indiv[1:])
+	if verbose:
+		print 'Running:', cmd
+	args = shlex.split(cmd)
+	proc = Popen(args, stdout=PIPE)
+	out, _ = proc.communicate()
+	if proc.returncode != 0:
+		print out
+		raise Exception('\'' + cmd + '\' returned a non-0 status!')
+	if res_re:
+		match = res_re.search(out)
+		if match:
+			l = match.group(1)
+		else:
+			raise Exception('Could not parse the output!')
+	else:
+		l = out.splitlines()[-1]
+
+	ret = (pop_idx, pop_indiv[:])
+	ret[1][0] = float(l)
+	res_queue.put(ret)
+
 class Cont:
 	def __init__(self, cmd_str, res_re, max_launches, verbose):
 		self.cmd_str = cmd_str
 		self.res_re = res_re
+		self.num_launches = 0
 		self.max_launches = max_launches
-		self.tasks = []
-		self.procs = []
+		self.pool = Pool(max_launches)
+		self.manager = Manager()
+		self.queue = self.manager.Queue()
 		self.verbose = verbose
-		self.cmds = []
-		for _ in range(max_launches):
-			self.tasks.append(None)
-			self.procs.append(None)
-			self.cmds.append(None)
-	
-	def add_task(self, pop_idx, pop_indiv):
-		for ii in range(self.max_launches):
-			if self.procs[ii] == None:
-				self.tasks[ii] = (pop_idx, pop_indiv[:])
-				self.cmds[ii] = self.cmd_str.format(*pop_indiv[1:])
-				if self.verbose:
-					print 'Running:', self.cmds[ii]
-				args = shlex.split(self.cmds[ii])
-				self.procs[ii] = Popen(args, stdout=PIPE)
-				return True
-		return False
-	
-	def poll_task(self):
-		for ii in range(self.max_launches):
-			if self.procs[ii] != None:
-				if self.procs[ii].poll() != None:
-					out, _ = self.procs[ii].communicate()
-					if self.procs[ii].returncode != 0:
-						print out
-						raise Exception('\'' + self.cmds[ii] + '\' returned a non-0 status!')
-					if self.res_re:
-						match = self.res_re.search(out)
-						if match:
-							l = match.group(1)
-						else:
-							raise Exception('Could not parse the output!')
-					else:
-						l = out.splitlines()[-1]
-					self.tasks[ii][1][0] = float(l)
-					self.procs[ii] = None
 
-					return self.tasks[ii]
-		return None
+	def add_task(self, pop_idx, pop_indiv):
+		if self.num_launches >= self.max_launches:
+			return False
+		self.pool.apply_async(task_runner, (self.queue, self.cmd_str, self.res_re, self.verbose, pop_idx, pop_indiv))
+		self.num_launches += 1
+		return True
+
+	def get_task(self):
+		if self.num_launches == 0:
+			return None
+		res = self.queue.get()
+		self.num_launches -= 1
+		return res
 
 	def kill_all(self):
-		for ii in range(self.max_launches):
-			if self.procs[ii] != None:
-				self.procs[ii].terminate()
+		self.pool.terminate()
 
 class ContDifferentialEvolutionOptimizer:
 	def __init__(self, cfg, limits, cmd_str, res_re, max_launches):
 		self.runner = Cont(cmd_str, res_re, max_launches, False)
-		
+
 		self.pop_size = cfg.getint('cont_de', 'pop_size')
 		if self.pop_size < 5:
 			self.pop_size = 5
@@ -80,12 +79,7 @@ class ContDifferentialEvolutionOptimizer:
 			self.min_var = cfg.getfloat('cont_de', 'min_var')
 		except NoOptionError:
 			self.min_var = 0
-		
-		try:
-			self.sleep_dur = cfg.getfloat('cont_de', 'sleep_dur')
-		except NoOptionError:
-			self.sleep_dur = 1.0
-		
+
 		self.init = []
 		idx = 0
 		while True:
@@ -101,19 +95,16 @@ class ContDifferentialEvolutionOptimizer:
 				raise Exception('Invalid init string "%s" (expected "[param0 param1 ...]")' % init_str)
 			self.init.append(init)
 			idx += 1
-		
+
 		self.limits = limits
 
 	def run(self):
 		parents = new_pop(self.init, self.pop_size, self.limits)
-		evaluating = []
-		for _ in range(self.pop_size):
-			evaluating.append(False)
-		
+
 		factor = self.factor
 		if factor == None:
 			factor = random.random() * 0.5 + 0.5
-		
+
 		# First, evaluate the parents
 		pop_idx = 0
 		num_done = 0
@@ -123,57 +114,57 @@ class ContDifferentialEvolutionOptimizer:
 					pop_idx += 1
 				else:
 					break
-			
+
 			while True:
-				ret = self.runner.poll_task()
+				ret = self.runner.get_task()
 				if not ret:
 					break
 				idx, indiv = ret
 				parents[idx] = indiv
 				num_done += 1
-			time.sleep(self.sleep_dur)
 
 		parents.sort()
 		var = pop_variance(parents)
 		print 'Start best:', parents[0][1:], 'fit:', parents[0][0], 'parents var:', var
-		
+
 		# Now, check the children
 		trial = 0
 		pop_idx = 0
 		children = []
-		while trial < self.max_trials:
+		done = False
+		while not done:
 			while True:
 				if self.runner.add_task(pop_idx, mutate(parents, self.limits, factor, self.cross, pop_idx, None)):
 					pop_idx = (pop_idx + 1) % self.pop_size
 				else:
 					break
-			
+
 			while True:
-				ret = self.runner.poll_task()
+				ret = self.runner.get_task()
 				if not ret:
 					break
 				trial += 1
 				idx, indiv = ret
 				children.append(indiv)
 
-			if len(children) >= self.pop_size:
-				if self.factor == None:
-					factor = random.random() * 0.5 + 0.5
-				
-				pop = children + parents
-				pop.sort()
-				parents = pop[:self.pop_size]
-				var = pop_variance(parents)
-				print 'Trial', trial, 'best:', parents[0][1:], 'fit:', parents[0][0], 'parents var:', var
-				if var < self.min_var:
-					print 'Variance lower than minimum variance (%f). Stopping.' % self.min_var
-					break
-				children = []
-			
-			if trial == self.max_trials - 1:
-				print 'Maximum number of trials reached. Stopping.'
-				break
+				if len(children) >= self.pop_size:
+					if self.factor == None:
+						factor = random.random() * 0.5 + 0.5
 
-			time.sleep(self.sleep_dur)
+					pop = children + parents
+					pop.sort()
+					parents = pop[:self.pop_size]
+					var = pop_variance(parents)
+					print 'Trial', trial, 'best:', parents[0][1:], 'fit:', parents[0][0], 'parents var:', var
+					if var < self.min_var:
+						print 'Variance lower than minimum variance (%f). Stopping.' % self.min_var
+						done = True
+						break
+					children = []
+
+				if trial >= self.max_trials - 1:
+					print 'Maximum number of trials reached. Stopping.'
+					done = True
+					break
 		self.runner.kill_all();
 		return pop
