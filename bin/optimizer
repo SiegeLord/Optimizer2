@@ -55,7 +55,7 @@ def main():
 	
 	args = parser.parse_args()
 	
-	cfg = SafeConfigParser();
+	cfg = SafeConfigParser()
 	
 	if args.cfg_name:
 		cfg.read(args.cfg_name)
