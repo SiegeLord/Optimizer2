@@ -47,7 +47,7 @@ class DifferentialEvolutionOptimizer:
 	def run(self):
 		parents = new_pop(self.init, self.pop_size, self.limits)
 		
-		self.runner(parents)
+		self.runner.run_all(parents)
 		parents.sort()
 		
 		print 'Start best:', parents[0][1:], 'fit:', parents[0][0]
@@ -66,7 +66,7 @@ class DifferentialEvolutionOptimizer:
 			for ii in range(self.pop_size):
 				children.append(mutate(parents, self.limits, factor, self.cross, ii, best_idx))
 			
-			self.runner(children)
+			self.runner.run_all(children)
 			pop = children + parents
 			pop.sort()
 			parents = pop[:self.pop_size]
@@ -77,4 +77,5 @@ class DifferentialEvolutionOptimizer:
 				break
 			if gen == self.max_gen - 1:
 				print 'Maximum generation reached. Stopping.'
+		self.runner.kill_all();
 		return pop
