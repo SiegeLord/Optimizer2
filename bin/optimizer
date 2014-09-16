@@ -7,7 +7,6 @@
 from ConfigParser import SafeConfigParser, NoOptionError
 from argparse import ArgumentParser
 
-import fileinput
 import re
 
 from optimizer2.differential_evolution import DifferentialEvolutionOptimizer
@@ -16,8 +15,10 @@ from optimizer2.array_parser import parse_array
 from optimizer2.runner import Runner
 
 def main():
-	parser = ArgumentParser()
-	parser.add_argument('--cfg', dest='cfg_name', help='Configuration file name. If omitted, the file will be read from stdin.')
+	parser = ArgumentParser(usage='%(prog)s [OPTIONS] CFG_NAME')
+	parser.add_argument('--cfg', dest='cfg_name', help='deprecated, use the positional argument instead')
+	parser.add_argument('--version', action='version', version='%(prog)s 0.6')
+	parser.add_argument('CFG_NAME', nargs='?', help='configuration file name')
 	
 	args = parser.parse_args()
 	
@@ -25,8 +26,12 @@ def main():
 	
 	if args.cfg_name:
 		cfg.read(args.cfg_name)
+	elif args.CFG_NAME:
+		cfg.read(args.CFG_NAME)
 	else:
-		cfg.readfp(fileinput.input())
+		print 'usage: optimizer [OPTIONS] CFG_NAME'
+		print 'optimizer: error: too few arguments'
+		exit(-1)
 	
 	cmd_str = cfg.get('options', 'command')
 	try:
