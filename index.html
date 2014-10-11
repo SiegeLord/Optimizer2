@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="doc/style.css" type="text/css" />
+</head>
+<body>
+<h1>Optimizer2 Guide</h1>
+
+<p>This guide will cover the basic and advanced usage of Optimizer2, a 
+simple optimization software.</p>
+<div id="TOC">
+<ul>
+<li><a href="#what-is-optimizer2">What is Optimizer2?</a></li>
+<li><a href="#installation">Installation</a><ul>
+<li><a href="#installation-using-pip">Installation Using <code>pip</code></a></li>
+<li><a href="#manual-installation">Manual Installation</a></li>
+<li><a href="#verifying-the-installation">Verifying The Installation</a></li>
+</ul></li>
+<li><a href="#basic-usage">Basic Usage</a><ul>
+<li><a href="#writing-a-program-to-be-optimized">Writing a Program to be Optimized</a></li>
+<li><a href="#configuring-the-optimization-run">Configuring the Optimization Run</a></li>
+<li><a href="#running-the-optimization">Running the Optimization</a></li>
+</ul></li>
+<li><a href="#advanced-usage">Advanced Usage</a><ul>
+<li><a href="#additional-parameters-for-differential-evolution">Additional Parameters for Differential Evolution</a></li>
+<li><a href="#continuous-differential-evolution">Continuous Differential Evolution</a></li>
+<li><a href="#adapting-an-existing-program">Adapting an Existing Program</a></li>
+<li><a href="#passing-arguments-to-your-program-without-modifying-the-configuration-file">Passing Arguments to Your Program Without Modifying the Configuration File</a></li>
+</ul></li>
+</ul>
+</div>
+<h2 id="what-is-optimizer2"><a href="#what-is-optimizer2">What is Optimizer2?</a></h2>
+<p>Optimizer2 is a command line tool that will attempt to minimize a user defined function that maps a real vector into a scalar. The function to be minimized is defined by creating a program that receives the arguments on the command line, and writes the function result to standard output. Optimizer2 will invoke this program multiple times with different values of the arguments in order to attempt to find a minimum. The function can be anything that satisfies the above requirements. It can be a scientific model with a set of parameters that you want to search over, or it could be AI model for a game that needs some parameters tweaked. Many problems can be posed as those of function minimization, and this tool aims to make the actual step of minimization relatively simple. This guide will use terms 'minimize' and 'optimize' interchangeably.</p>
+<p>Note, that for historical reasons, this software is called Optimizer2, but the actual executable name is <code>optimizer</code>.</p>
+<p>There are four steps that you tend to take when optimizing a function:</p>
+<ol style="list-style-type: decimal">
+<li>Create a program that takes the function arguments via the command line and outputs the function result to standard output.</li>
+<li>Create a configuration file for Optimizer2 that describes how to interface with your program, and specifies the optimization algorithm.</li>
+<li>Run the optimization.</li>
+<li>Examine the results and possibly repeat steps 1-3.</li>
+</ol>
+<p>This guide will cover these steps.</p>
+<h2 id="installation"><a href="#installation">Installation</a></h2>
+<p>Optimizer2 is written in <a href="https://www.python.org/downloads/">Python</a>, and requires Python version 2.7 or later (but not 3.x).</p>
+<h3 id="installation-using-pip"><a href="#installation-using-pip">Installation Using <code>pip</code></a></h3>
+<p>Typically, <a href="https://pip.pypa.io/en/latest/">pip</a> is only easily available on Linux.</p>
+<ul>
+<li><p>If you have administrator privileges, run:</p>
+<pre><code>sudo pip install optimizer2</code></pre></li>
+<li><p>If you don't, run:</p>
+<pre><code>pip install optimizer2</code></pre></li>
+</ul>
+<h3 id="manual-installation"><a href="#manual-installation">Manual Installation</a></h3>
+<ol style="list-style-type: decimal">
+<li>Download the latest release from <a href="https://pypi.python.org/pypi/optimizer2">here</a> (see the source link towards the bottom) and extract it somewhere.</li>
+<li>Open a terminal and navigate to where you extracted it. This directory should have the <code>README</code> and other files.</li>
+<li><p>Install it</p>
+<ul>
+<li><p>If you are on Windows, run:</p>
+<pre><code>python setup.py install</code></pre></li>
+<li><p>If you have administrator privileges on a UNIX-like system (e.g. Mac OSX), run:</p>
+<pre><code>sudo python setup.py install</code></pre></li>
+<li><p>If you don't have administrator privileges on a UNIX-like system, run:</p>
+<pre><code>python setup.py install --prefix $HOME</code></pre></li>
+</ul>
+<p>This will install it into your home folder. This assumes that you've set things up to run programs from it (e.g. added <code>$HOME/bin</code> to <code>PATH</code> and amended <code>PYTHONPATH</code>)</p></li>
+</ol>
+<h3 id="verifying-the-installation"><a href="#verifying-the-installation">Verifying The Installation</a></h3>
+<p>Run this command:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">optimizer</span> --version</code></pre>
+<p>This should output the version of Optimizer2 that you've installed. On Windows, you may need to invoke it using a slightly more verbose invocation like this:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">python</span> C:\Python27\Scripts\optimizer --version</code></pre>
+<h2 id="basic-usage"><a href="#basic-usage">Basic Usage</a></h2>
+<p>This section will assume that you have a UNIX-like environment available (on Windows you can obtain one from the <a href="http://sourceforge.net/projects/msys2/">MSYS2 project</a>).</p>
+<h3 id="writing-a-program-to-be-optimized"><a href="#writing-a-program-to-be-optimized">Writing a Program to be Optimized</a></h3>
+<p>To be compatible with Optimizer2, your program must be able to take arguments via the command line and output the quantity to be minimized to standard output. For example, let's say that you want to minimize the <a href="http://en.wikipedia.org/wiki/Rosenbrock_function">Rosenbrock function</a>. Here is an example C program that implements this function and is compatible with Optimizer2:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;stdio.h&gt;</span>
+<span class="ot">#include &lt;stdlib.h&gt;</span>
+
+<span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span>** argv)
+{
+    <span class="co">// Make sure we have two arguments</span>
+    <span class="kw">if</span>(argc &lt; <span class="dv">3</span>)
+        <span class="kw">return</span> -<span class="dv">1</span>;
+    <span class="co">// Read the first argument</span>
+    <span class="dt">double</span> x = atof(argv[<span class="dv">1</span>]);
+    <span class="co">// Read the second argument</span>
+    <span class="dt">double</span> y = atof(argv[<span class="dv">2</span>]);
+    <span class="co">// Compute the function value</span>
+    <span class="dt">double</span> rosenbrock = <span class="fl">100.0</span> * ((y - x * x) * (y - x * x))
+                        + (<span class="fl">1.0</span> - x) * (<span class="fl">1.0</span> - x);
+    printf(<span class="st">&quot;Result: %f</span><span class="ch">\n</span><span class="st">&quot;</span>, rosenbrock); <span class="co">// Print it to standard output</span>
+}</code></pre>
+<p>After compiling this with your favorite C compiler, you can test this program on the command line:</p>
+<pre><code>$ ./rosenbrock 1.0 1.0
+Result: 0.000000</code></pre>
+<p>When passed to <code>optimizer</code>, it will call this program in much the same way and then parse the standard output (specifically it will look for the <code>Result: xxxxx</code> line) and attempt to minimize it by varying the argument values. <code>optimizer</code> may run these programs in parallel, but there is no chance of the standard outputs getting mixed up.</p>
+<p>See <a href="#advanced-usage">Advanced Usage</a> section for more tips on writing these programs.</p>
+<h3 id="configuring-the-optimization-run"><a href="#configuring-the-optimization-run">Configuring the Optimization Run</a></h3>
+<p>Optimizer2 requires a configuration file to describe your optimization problem. We will first show a complete configuration file and then go through it line by line. Here is a configuration file that interfaces with the above C code for the Rosenbrock function:</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="kw">[options]</span>
+<span class="dt">command      </span><span class="ot">=</span><span class="st"> ./rosenbrock {</span><span class="dv">0</span><span class="st">} {</span><span class="dv">1</span><span class="st">}</span>
+<span class="dt">num_args     </span><span class="ot">=</span><span class="st"> </span><span class="dv">2</span>
+<span class="dt">limit0       </span><span class="ot">=</span><span class="st"> [-</span><span class="dv">5</span><span class="st">, </span><span class="dv">5</span><span class="st">]</span>
+<span class="dt">limit1       </span><span class="ot">=</span><span class="st"> [-</span><span class="dv">5</span><span class="st">, </span><span class="dv">5</span><span class="st">]</span>
+<span class="dt">result_re    </span><span class="ot">=</span><span class="st"> Result: (.*)</span>
+<span class="dt">max_launches </span><span class="ot">=</span><span class="st"> </span><span class="dv">2</span>
+<span class="dt">algorithm    </span><span class="ot">=</span><span class="st"> de</span>
+
+<span class="kw">[de]</span>
+<span class="dt">pop_size     </span><span class="ot">=</span><span class="st"> </span><span class="dv">20</span>
+<span class="dt">cross        </span><span class="ot">=</span><span class="st"> </span><span class="fl">0.9</span>
+<span class="dt">max_gen      </span><span class="ot">=</span><span class="st"> </span><span class="dv">50</span>
+<span class="dt">strategy     </span><span class="ot">=</span><span class="st"> rand</span>
+<span class="dt">init0        </span><span class="ot">=</span><span class="st"> [</span><span class="fl">0.5</span><span class="st">, </span><span class="fl">0.5</span><span class="st">]</span></code></pre>
+<p>The configuration file uses the <a href="https://en.wikipedia.org/wiki/INI_file">INI file format</a>.</p>
+<h4 id="general-options"><a href="#general-options">General Options</a></h4>
+<p>The <code>[options]</code> section describes the optimization problem.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">command </span><span class="ot">=</span><span class="st"> ./rosenbrock {</span><span class="dv">0</span><span class="st">} {</span><span class="dv">1</span><span class="st">}</span></code></pre>
+<p>This specifies how <code>optimizer</code> should invoke your program. First, it naturally contains the name of your program (prefixed with <code>./</code> as it will try to launch it from the same directory that it was invoked from, see next section). The special <code>{#}</code> syntax signifies where the argument values will be pasted in. That is, the first argument will be placed where <code>{0}</code> appears, second argument will be placed where <code>{1}</code> appears and so on. You can place other arguments when specifying the value of <code>command</code>. For example, if your program accepts an argument named <code>--fast</code> it is perfectly legal for <code>command</code> to be <code>./your_program --fast {0} {1}</code>. Note that the program is not ran in a shell, so this command, for example, won't do what you might expect: <code>./your_program  {0} {1} --data-files data/*</code>.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">num_args </span><span class="ot">=</span><span class="st"> </span><span class="dv">2</span>
+<span class="dt">limit0   </span><span class="ot">=</span><span class="st"> [-</span><span class="dv">5</span><span class="st">, </span><span class="dv">5</span><span class="st">]</span>
+<span class="dt">limit1   </span><span class="ot">=</span><span class="st"> [-</span><span class="dv">5</span><span class="st">, </span><span class="dv">5</span><span class="st">]</span></code></pre>
+<p>This describes the number of arguments <code>num_args</code> and their limits. The limits are described using the <code>limit# = [min, max]</code> syntax, where <code>#</code> is the relevant argument index. The minimum and maximum are inclusive. Take extra care to make sure <code>num_args</code> matches the number of arguments you described in the <code>command</code> value and the number of <code>limit#</code> values.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">result_re </span><span class="ot">=</span><span class="st"> Result: (.*)</span></code></pre>
+<p>This describes what <code>optimizer</code> will look for in the standard output of your program to determine what to minimize. The value of this option is a <a href="https://docs.python.org/2/library/re.html#regular-expression-syntax">regular expression</a> with a single capture group (in this case, this is the <code>(.*)</code> part of the regular expression). The text captured by the capture group will be interpreted as a decimal fraction. Exponential syntax (e.g. <code>1.0e5</code>) is supported. Typically, the value for this option will be some identifying text that won't be confused with other output of your program (in this case, <code>Result:</code>, but otherwise it can be anything) followed by the capture group. <code>optimizer</code> will use this regular expression on each line of the standard output of your program.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">max_launches </span><span class="ot">=</span><span class="st"> </span><span class="dv">2</span></code></pre>
+<p>This specifies how many instances of your program <code>optimizer</code> will launch in parallel. If omitted, it will be set to 1.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">algorithm </span><span class="ot">=</span><span class="st"> de</span></code></pre>
+<p>This specifies which algorithm will be used to optimize your program. Currently, there are two choices:</p>
+<ul>
+<li><code>de</code> - Differential evolution, a classic, general purpose optimization algorithm.</li>
+<li><code>cont_de</code> - Continuous differential evolution, a continuous extension of the algorithm.</li>
+</ul>
+<p>Whichever one you choose, <code>optimizer</code> will expect an option section with the same name later in the configuration file in this case, it will expect the <code>de</code> section). The commonly used differential evolution algorithm will be described below, while the more special purpose continuous variant is described in the <a href="#continuous-differential-evolution">Continuous Differential Evolution</a> section below.</p>
+<h4 id="differential-evolution"><a href="#differential-evolution">Differential Evolution</a></h4>
+<p><a href="http://en.wikipedia.org/wiki/Differential_evolution">Differential evolution</a> is a good, general purpose optimization algorithm. In gross terms, it optimizes your function by maintaining a population of function argument sets with their associated function values, and it creates new candidate arguments by combining them using a particular stochastic crossover strategy. The algorithm proceeds in generations, where the entire population is potentially refreshed with new candidates, if they are better. The options for this algorithm are set in the <code>de</code> section.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">pop_size </span><span class="ot">=</span><span class="st"> </span><span class="dv">20</span></code></pre>
+<p>This specifies the population size. The rule of thumb for this value is to set it to be 10 times the number of function arguments you have (since the Rosenbrock function has only 2 arguments, we choose a population size of 20), but limit it to 40. Note that the worst failure mode of differential evolution is population diversity crash (i.e. premature convergence), so going for more is better if you can afford it. The initial argument values are picked uniformly from the argument limits specified in the general options.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">cross </span><span class="ot">=</span><span class="st"> </span><span class="fl">0.9</span></code></pre>
+<p>This specifies the crossover probability. Low crossover results in coordinate ascent-style parameter trajectories, while high crossover is more useful for situations with parameter dependence. 0.9 is a reasonable midway point suggested by the algorithm authors.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">max_gen </span><span class="ot">=</span><span class="st"> </span><span class="dv">50</span></code></pre>
+<p>This specifies the maximum number of generations to simulate. Each generation involves <code>pop_size</code> number of function evaluations.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">strategy </span><span class="ot">=</span><span class="st"> rand</span></code></pre>
+<p>This specifies the cross-over strategy. There are two choices here:</p>
+<ul>
+<li><p><code>rand</code> - The 'DE/rand/1/bin' method from the algorithm description. In gross terms, this chooses random argument sets when creating new candidates.</p></li>
+<li><p><code>best</code> - The 'DE/best/1/bin' method from the algorithm description. In gross terms, this, in addition to what 'DE/rand/1/bin' does, also takes into account the best argument set in the current population.</p></li>
+</ul>
+<p><code>rand</code> seems to work well in many cases.</p>
+<pre class="sourceCode ini"><code class="sourceCode ini"><span class="dt">init0 </span><span class="ot">=</span><span class="st"> [</span><span class="fl">0.5</span><span class="st">, </span><span class="fl">0.5</span><span class="st">]</span></code></pre>
+<p>It is possible to seed the initial population with some argument values. These follow the following syntax: <code>init# = [arg1, arg2, ...]</code>, where <code>#</code> is the initial argument set index (you have to start at zero and count up), while the array to the right of <code>=</code> specifies the actual values. Make sure the number of values matches what you specified in the general options.</p>
+<h3 id="running-the-optimization"><a href="#running-the-optimization">Running the Optimization</a></h3>
+<p>Once you've got everything ready, running the optimization is simple. Just invoke <code>optimizer</code> with your configuration file as an argument:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">optimizer</span> rosenbrock.cfg</code></pre>
+<p>Note that <code>optimizer</code> will output everything about the optimization run to to standard output, so in practice it helps to redirect it somewhere for later analysis. The <code>tee</code> command is particularly useful here:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">optimizer</span> rosenbrock.cfg <span class="kw">|</span> <span class="kw">tee</span> optimization_output</code></pre>
+<p>Monitoring the run is a bit complicated by the fact that Python likes to buffer the standard output (i.e. it won't output anything until a certain amount is written). Thus, in practice, it is better to run optimizer via Python, like this:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">python</span> -u <span class="ot">$(</span><span class="kw">which</span> optimizer<span class="ot">)</span> rosenbrock.cfg <span class="kw">|</span> <span class="kw">tee</span> optimization_output</code></pre>
+<p>The <code>-u</code> flag in particular turns off the buffering behavior mentioned above.</p>
+<h2 id="advanced-usage"><a href="#advanced-usage">Advanced Usage</a></h2>
+<p>This section describes some of the more rarely used features of Optimizer2, as well as a few tips and tricks.</p>
+<h3 id="additional-parameters-for-differential-evolution"><a href="#additional-parameters-for-differential-evolution">Additional Parameters for Differential Evolution</a></h3>
+<ul>
+<li><p><code>min_var</code> - Normally optimization stops only when the maximum number of generations is reached (specified by the <code>max_gen</code> parameter). The population geometric mean of variances of each of the function arguments can be used as a stopping condition. This parameter specifies the value of that average, which, when reached causes the optimization to stop.</p></li>
+<li><p><code>factor</code> - This specifies the weighting factor for the algorithm. If ommitted, it is chosen randomly from the range <code>[0.5, 1.0]</code> each generation as suggested by the algorithm authors.</p></li>
+</ul>
+<h3 id="continuous-differential-evolution"><a href="#continuous-differential-evolution">Continuous Differential Evolution</a></h3>
+<p>Continuous differential evolution is an extension of the usual differential evolution to make it more efficient on massively parallel systems. The standard differential evolution algorithm simulates all the candidate argument sets in a generation before generating more candidates. On systems which can simulate all of a generation in parallel, the possible variability in the simulation time of the individual argument sets becomes a source of inefficiency. For example, one parameter set may take a much longer time to simulate than all others, which would imply that much of the parallelism afforded by the system will be wasted.</p>
+<p>Continuous differential evolution side-steps this by avoiding the concept of a generation, and instead generates the candidate argument sets continuously. That is, as soon as one candidate finishes evaluating, another one is generated. This greatly increases the utilization of the parallel system. Note that the initial set of parameters must be evaluated to completion, so if you are optimizing a function with a very large variability in run time, the very first 'generation' will take as long as the slowest evaluation.</p>
+<p>This does not come for free, however as this algorithm biases against the slower function evaluations. Make sure that function evaluation time is either uncorrelated or anti-correlated with the function value (i.e. smaller function values take less time to compute and will thus be naturally selected for).</p>
+<p>This algorithm's parameters are declared in the <code>[cont_de]</code> section. It shares the following parameters with differential evolution:</p>
+<ul>
+<li><code>pop_size</code> - Population size</li>
+<li><code>factor</code> - Weighting factor</li>
+<li><code>cross</code> - Crossover probability</li>
+<li><code>min_var</code> - Minimum population geometric mean of the function arguments</li>
+<li><code>init#</code> - Initial argument sets</li>
+</ul>
+<p>The new parameter is:</p>
+<pre><code>max_trials</code></pre>
+<p>Since continuous differential evolution doesn't have generations, the default stopping condition is the number of function evaluations.</p>
+<h3 id="adapting-an-existing-program"><a href="#adapting-an-existing-program">Adapting an Existing Program</a></h3>
+<p>Often, you do not have the option to write a brand new program for each optimization program. This typically happens when you have several separate programs that must run in sequence before you can evaluate the function. For this, you generally use a (bash) script. For example, this program will execute two different programs, analyze their outputs and then finally print out a function value:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#!/bin/bash</span>
+
+<span class="co"># Create two temporary files to capture the output of program_1 and program_2</span>
+<span class="ot">file_1=$(</span><span class="kw">mktemp</span><span class="ot">)</span>
+<span class="ot">file_2=$(</span><span class="kw">mktemp</span><span class="ot">)</span>
+
+<span class="co"># Run the two programs with all the arguments, and capture their outputs</span>
+<span class="kw">./program_1</span> <span class="ot">$@</span> <span class="kw">&gt;</span> <span class="ot">$file_1</span>
+<span class="kw">./program_2</span> <span class="ot">$@</span> <span class="kw">&gt;</span> <span class="ot">$file_2</span>
+
+<span class="co"># Analyze the programs&#39; output. This program will actually print something to</span>
+<span class="co"># standard output for optimizer to read</span>
+<span class="kw">./analyze</span> <span class="ot">$file_1</span> <span class="ot">$file_2</span></code></pre>
+<h3 id="passing-arguments-to-your-program-without-modifying-the-configuration-file"><a href="#passing-arguments-to-your-program-without-modifying-the-configuration-file">Passing Arguments to Your Program Without Modifying the Configuration File</a></h3>
+<p>Occasionally, it is useful to send additional arguments to your program without modifying the configuration script each time you make that change. The easiest way to do this is to use <a href="http://en.wikipedia.org/wiki/Environment_variable">environment variables</a>. This typically requires you to wrap your program in a (bash) script. For example, let's say you want to pass two arguments to your program, named <code>ARG1</code> and <code>ARG2</code>. To do this, you would invoke <code>optimizer</code> like so:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="ot">ARG1=</span>-a <span class="ot">ARG2=</span>-b <span class="kw">optimizer</span> optimization.cfg <span class="kw">&gt;</span> optimization_report</code></pre>
+<p>To access the values from the wrapper script, you would simply expand those two variable names. E.g:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">echo</span> <span class="ot">$ARG1</span>
+<span class="kw">echo</span> <span class="ot">$ARG2</span></code></pre>
+<p>will print</p>
+<pre><code>-a
+-b</code></pre>
+<p>It is possible to access these variables from your program as well, as all programming languages allow you to get the value of the environment variables.</p>
+</body>
+</html>
