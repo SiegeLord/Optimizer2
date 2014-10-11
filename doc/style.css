@@ -1,0 +1,13 @@
+pre {
+	background: #f0f0f0;
+	padding: 10pt;
+	font: 11pt monospace;
+}
+
+code {
+	font: 11pt monospace;
+}
+
+h3 code{
+	font: 16pt monospace;
+}
