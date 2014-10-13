@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='optimizer2',
-      version='0.7',
+      version='0.7.1',
       description='A command line optimization software',
       author='Pavel Sountsov',
       author_email='slabode@aim.com',

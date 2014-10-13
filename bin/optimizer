@@ -17,7 +17,7 @@ from optimizer2.runner import Runner
 def main():
 	parser = ArgumentParser(usage='%(prog)s [OPTIONS] CFG_NAME')
 	parser.add_argument('--cfg', dest='cfg_name', help='deprecated, use the positional argument instead')
-	parser.add_argument('--version', action='version', version='%(prog)s 0.6')
+	parser.add_argument('--version', action='version', version='%(prog)s 0.7.1')
 	parser.add_argument('CFG_NAME', nargs='?', help='configuration file name')
 	
 	args = parser.parse_args()
